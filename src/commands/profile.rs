@@ -3,10 +3,29 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
+use crate::commands::detect::detect_project_ports;
 use crate::commands::listeners_sorted;
 
 /// File written in the current directory to remember a project's ports.
 pub const PROFILE_FILE: &str = ".portsmith.json";
+
+/// Resolves the ports to save when none were given on the command line: first
+/// tries to detect them from the project, otherwise captures live listeners.
+fn detect_or_capture() -> Vec<u16> {
+    let detected = detect_project_ports();
+    if !detected.is_empty() {
+        for d in &detected {
+            println!("Detected port {} from {}", d.port, d.source);
+        }
+        return detected.into_iter().map(|d| d.port).collect();
+    }
+
+    println!("No project ports found in .env or package.json; capturing live ports instead.");
+    match listeners_sorted() {
+        Some(listeners) => listeners.iter().map(|l| l.socket.port()).collect(),
+        None => Vec::new(),
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Profile {
@@ -29,16 +48,14 @@ impl Profile {
 
 /// `portsmith profile save [ports...]` — record the project's ports.
 ///
-/// With explicit ports, saves exactly those. With no arguments, captures every
-/// port currently listening on the machine.
+/// With explicit ports, saves exactly those. With no arguments, auto-detects the
+/// project's ports from `.env*` files and `package.json` scripts; if none are
+/// found, falls back to capturing every port currently listening.
 pub fn save(ports: Vec<u16>) {
-    let mut ports = if ports.is_empty() {
-        let Some(listeners) = listeners_sorted() else {
-            return;
-        };
-        listeners.iter().map(|l| l.socket.port()).collect()
-    } else {
+    let mut ports = if !ports.is_empty() {
         ports
+    } else {
+        detect_or_capture()
     };
     ports.sort_unstable();
     ports.dedup();

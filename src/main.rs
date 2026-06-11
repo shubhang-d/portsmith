@@ -73,7 +73,7 @@ enum Commands {
 enum ProfileAction {
     /// Save the project's ports to .portsmith.json.
     Save {
-        /// Ports to save. Defaults to all currently listening ports.
+        /// Ports to save. If omitted, auto-detects from .env and package.json.
         ports: Vec<u16>,
     },
 }
