@@ -1,3 +1,4 @@
+pub mod check;
 pub mod detect;
 pub mod kill;
 pub mod list;
