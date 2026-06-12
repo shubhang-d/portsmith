@@ -1,6 +1,6 @@
 [package]
 name = "portsmith"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
 authors = ["Shubhang Dixit"]
 description = "Take control of your ports — a tiny, fast, cross-platform CLI to see, free, and manage the ports your projects use."
